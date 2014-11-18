@@ -1,0 +1,3 @@
+{
+	"database" : "Driver={SQL Server};Server=SERVER;Database=MuOnline;Uid=sa;Pwd=;"
+}
