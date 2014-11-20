@@ -22,3 +22,4 @@ Updates futuros
 - Criar evento de dominação de castelos de devias
 - Criar evento de sobrevivência
 - Criar evento de captura de bandeira
+- Sistema de duelo (x1)
