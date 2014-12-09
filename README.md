@@ -12,10 +12,10 @@ Requisições de fixes/alterações/coisas coisas novas deverão ser criadas nas
 MuServer
 ==============
 
-MuServer Base
+##### MuServer
 http://www.wolfulus.com/downloads/muserver.rar
 
-MuServer Update #1
+##### Update #1
 http://www.wolfulus.com/downloads/muserver_update1.rar
 
 Compras
