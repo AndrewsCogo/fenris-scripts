@@ -17,24 +17,95 @@ class Duel:
 
 	# constructor
 	def __init__(self, player1, player2):
+		self.points = dict()
 		self.players = [player1, player2]
-		Events.register('player.kill', self.event_kill)
+		self.points[player1.get_name()] = 0
+		self.points[player2.get_name()] = 0
+		self.finish_callback = None
+		timer.timeout(self.start, 5000)
+		self.respawn_id = None
+		self.respawn_map = player2.get_map()
+		self.respawn_x = player2.get_x()
+		self.respawn_y = player2.get_y()
+		self.duel_time = 3
+		player1.message('[Sistema] O duelo comecara em 5 segundos...')
+		player1.message('[Sistema] Tempo maximo do duelo: %d minutos' % self.duel_time)
+		player2.message('[Sistema] O duelo comecara em 5 segundos...')
+		player2.message('[Sistema] Tempo maximo do duelo: %d minutos' % self.duel_time)
 		
-	# pega o primeiro jogador
-	def get_first_player(self):
-		return self.players[0]
+	def respawn(self):
+		if self.respawn_id != None:
+			timer.clear(self.respawn_id)
+			self.respawn_id = None
+		self.respawn_id = timer.timeout(self.respawn_callback, 1000 * 8) # 8 segundos para o respawn
 		
-	# pega o segundo jogador
-	def get_second_player(self):
-		return self.players[1]
+	def respawn_callback(self):
+		self.respawn_id = None
+		self.players[0].teleport(self.respawn_map, self.respawn_x, self.respawn_y)
+		self.players[1].teleport(self.respawn_map, self.respawn_x, self.respawn_y)
+		self.players[0].message('[Sistema] Lutem!')
+		self.players[1].message('[Sistema] Lutem!')
+		
+	def start(self):
+		tempo = (1000 * 60) * self.duel_time		
+		self.timer = timer.timeout(self.finish, tempo)
+		self.respawn_callback()
+		
+	def finish(self):
+		self.players[0].message('[Sistema] Duelo encerrado.')
+		self.players[1].message('[Sistema] Duelo encerrado.')
+		
+		player1 = self.players[0]
+		player2 = self.players[1]
+		
+		pontos1 = self.points[self.players[0].get_name()]
+		pontos2 = self.points[self.players[1].get_name()]
+		
+		if pontos1 == pontos2:			
+			self.players[0].message('[Sistema] Resultado: empatado com %d pontos' % pontos1)
+			self.players[1].message('[Sistema] Resultado: empatado com %d pontos' % pontos1)
+			if self.finish_callback != None:
+				self.finish_callback(self, None)
+		else:
+			pontos = pontos1
+			winner = player1
+			if pontos2 > pontos1:
+				pontos = pontos2
+				winner = player2		
+			self.players[0].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
+			self.players[1].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
+			if self.finish_callback != None:
+				self.finish_callback(self, winner)
+		
+	def on_finish(self, callback):
+		self.finish_callback = callback
 		
 	def event_kill(self, id1, id2):
-		player1 = Player(id1)
-		player2 = Player(id2)
-		#if player1.get_name() == self.get_first_player().get_name():
-		#if player2.get_name() == self.get_second_player().get_name():
+		killer = Player(id1)
+		victim = Player(id2)	
+		
+		if not (killer.get_name() == self.players[0].get_name() and victim.get_name() == self.players[1].get_name()):
+			if not (victim.get_name() == self.players[0].get_name() and killer.get_name() == self.players[1].get_name()):
+				return
+		
+		if self.respawn_id != None:			
+			killer.message('[Sistema] Nao valeu! Aguarde o respawn.')
+			victim.message('[Sistema] Nao valeu! %s nao aguardou o respawn.' % killer.get_name())
+			self.respawn()
+			return
+		
+		pontos = self.points[killer.get_name()]
+		pontos = pontos + 1
+		self.points[killer.get_name()] = pontos
 				
-				
+		victim.message('[Sistema] %s marcou um ponto' % killer.get_name())
+		killer.message('[Sistema] Voce marcou um ponto')	
+
+		if pontos >= 3:
+			self.finish()
+		else:
+			self.respawn()
+		
 		
 class DuelRequest:
 
@@ -77,10 +148,12 @@ class DuelRequest:
 class DuelCommand(Command):
 	
 	def __init__(self):
+		self.duels = []
 		self.requests = dict() 
-		self.register('/duelo', self.command_duel)
+		self.register('/duel', self.command_duel)
 		self.register('/aceitar', self.command_accept)
 		self.register('/recusar', self.command_refuse)
+		Events.register('player.kill', self.event_kill)
 		return
 		
 	def command_accept(self, player, arguments):
@@ -116,12 +189,30 @@ class DuelCommand(Command):
 					self.requests[name].get_source().message('[Sistema] Desculpe, mas o jogador %s aceitou o duelo com outra pessoa.' % target.get_name())
 					self.requests[name].clear_timeout()
 					del self.requests[name]		
+										
+			duel = Duel(source, target)
+			duel.on_finish(self.duel_finish)
+			self.duels.append(duel)
 			
 		else:
 			player.message('[Sistema] Este jogador nao pediu duelo com voce.')
 			return True	
 			
 		return True
+		
+	def duel_finish(self, duel, winner):
+		if winner != None:
+			Console.write('Dar premiacao para %s por ter ganhado duelo aqui.' % winner.get_name())
+		else:
+			Console.write('Duelo terminou empatado.')
+		self.remove_duel(duel)
+		
+	def remove_duel(self, duel):
+		for key in range(len(self.duels)):
+			d = self.duels[key]
+			if d.players[0].get_name() == duel.players[0].get_name() and d.players[1].get_name() == duel.players[1].get_name():
+				del self.duels[key]
+				return
 		
 	def command_refuse(self, player, arguments):
 			
@@ -200,6 +291,10 @@ class DuelCommand(Command):
 			source.message('[Sistema] Seu pedido de duelo contra %s expirou.' % target_name)
 			target.message('[Sistema] Pedido de duelo de %s expirou.' % source_name)
 			del self.requests[source_name]
+			
+	def event_kill(self, id1, id2):
+		for key in range(len(self.duels)):
+			self.duels[key].event_kill(id1, id2)
 
 #
 # Initialization
