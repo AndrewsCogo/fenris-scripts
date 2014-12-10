@@ -70,7 +70,7 @@ class Duel:
 			self.players[0].message('[Sistema] Resultado: empatado com %d pontos' % pontos1)
 			self.players[1].message('[Sistema] Resultado: empatado com %d pontos' % pontos1)
 			if self.finish_callback != None:
-				self.finish_callback(self, None)
+				self.finish_callback(self, None, None)
 		else:
 			pontos = pontos1
 			winner = player1
@@ -82,7 +82,7 @@ class Duel:
 			self.players[0].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
 			self.players[1].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
 			if self.finish_callback != None:
-				self.finish_callback(self, winner)
+				self.finish_callback(self, winner, looser)
 		
 	def on_finish(self, callback):
 		self.finish_callback = callback
