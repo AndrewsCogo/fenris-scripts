@@ -277,7 +277,7 @@ class DuelCommand(Command):
 			player.message('[Sistema] Este jogador esta tentando duelar contra outra pessoa.')
 			return True
 			
-		if self.in_duel(target.get_name())
+		if self.in_duel(target.get_name()):
 			player.message('[Sistema] Este jogador ja esta duelando com outra pessoa.')
 			return True
 			
