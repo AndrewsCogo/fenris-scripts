@@ -7,6 +7,7 @@ from inventory import *
 from item import * 
 import database
 import struct
+from timer import * 
 
 #
 # Player class
@@ -353,3 +354,27 @@ class Player(object):
 	def select_character(self):
 		self.set_closecount(1)
 		self.set_closetype(1)
+		
+	# duel
+	def increase_duel_wins(self):
+		db = database.get('muonline')
+		cursor = db.cursor()
+		cursor.execute("UPDATE Character SET FenrisDuelWins = FenrisDuelWins + 1 WHERE Name = ?" , [self.get_name()])
+		db.commit()
+		
+	def increase_duel_losses(self):
+		db = database.get('muonline')
+		cursor = db.cursor()
+		cursor.execute("UPDATE Character SET FenrisDuelLosses = FenrisDuelLosses + 1 WHERE Name = ?" , [self.get_name()])
+		db.commit()
+		
+def init_database():
+	_db = dbget('muonline')
+	_cursor = _db.cursor()
+	_cursor.execute("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Character]') AND name in (N'FenrisDuelWins')) ALTER TABLE Character ADD FenrisDuelWins INT NOT NULL DEFAULT 0")
+	_db.commit()
+	_cursor = _db.cursor()
+	_cursor.execute("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Character]') AND name in (N'FenrisDuelLosses')) ALTER TABLE Character ADD FenrisDuelLosses INT NOT NULL DEFAULT 0")
+	_db.commit()
+	
+timer.timeout(init_database, 2500)

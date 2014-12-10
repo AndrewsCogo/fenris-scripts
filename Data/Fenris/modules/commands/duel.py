@@ -74,9 +74,11 @@ class Duel:
 		else:
 			pontos = pontos1
 			winner = player1
+			looser = player2
 			if pontos2 > pontos1:
 				pontos = pontos2
-				winner = player2		
+				winner = player2
+				looser = player1		
 			self.players[0].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
 			self.players[1].message('[Sistema] Resultado: %s venceu com %d pontos' % (winner.get_name(), pontos))
 			if self.finish_callback != None:
@@ -189,11 +191,15 @@ class DuelCommand(Command):
 			self.requests[arguments[0]].clear_timeout()
 			del self.requests[arguments[0]]
 			
+			names_to_delete = []
 			for name in self.requests:
 				if self.requests[name].get_target_name() == target.get_name():
 					self.requests[name].get_source().message('[Sistema] Desculpe, mas o jogador %s aceitou o duelo com outra pessoa.' % target.get_name())
 					self.requests[name].clear_timeout()
-					del self.requests[name]		
+					names_to_delete.append(name)
+			
+			for name in names_to_delete:
+				del self.requests[name]		
 										
 			duel = Duel(source, target)
 			duel.on_finish(self.duel_finish)
@@ -205,12 +211,12 @@ class DuelCommand(Command):
 			
 		return True
 		
-	def duel_finish(self, duel, winner):
-		if winner != None:
-			Console.write('Dar premiacao para %s por ter ganhado duelo aqui.' % winner.get_name())
-		else:
-			Console.write('Duelo terminou empatado.')
+	def duel_finish(self, duel, winner, looser):
 		self.remove_duel(duel)
+		if winner != None:
+			winner.increase_duel_wins()
+		if looser != None:
+			looser.increase_duel_losses()
 		
 	def remove_duel(self, duel):
 		for key in range(len(self.duels)):
