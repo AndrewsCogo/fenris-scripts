@@ -277,6 +277,10 @@ class DuelCommand(Command):
 			player.message('[Sistema] Este jogador esta tentando duelar contra outra pessoa.')
 			return True
 			
+		if self.in_duel(target.get_name())
+			player.message('[Sistema] Este jogador ja esta duelando com outra pessoa.')
+			return True
+			
 		target.message('[Sistema] %s enviou um pedido de duelo.' % player.get_name())
 		target.message('[Sistema] Digite "/aceitar %s" para aceitar.' % player.get_name())
 		target.message('[Sistema] Digite "/recusar %s" para recusar ou aguarde 10 segundos.' % player.get_name())
@@ -287,6 +291,12 @@ class DuelCommand(Command):
 		self.requests[player.get_name()] = request
 		return True
 		
+	def in_duel(self, name):
+		for duel in self.duels:
+			if (duel.players[0].get_name() == name or duel.players[1].get_name() == name):
+				return True
+		return False
+			
 	def request_timeout(self, request):
 		target = request.get_target()
 		target_name = request.get_target_name()
