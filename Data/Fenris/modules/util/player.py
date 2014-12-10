@@ -369,7 +369,7 @@ class Player(object):
 		db.commit()
 		
 def init_database():
-	_db = dbget('muonline')
+	_db = database.get('muonline')
 	_cursor = _db.cursor()
 	_cursor.execute("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Character]') AND name in (N'FenrisDuelWins')) ALTER TABLE Character ADD FenrisDuelWins INT NOT NULL DEFAULT 0")
 	_db.commit()
