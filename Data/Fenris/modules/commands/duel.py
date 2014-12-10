@@ -52,6 +52,11 @@ class Duel:
 		self.respawn_callback()
 		
 	def finish(self):
+	
+		if self.timer != None:
+			timer.clear(self.timer)
+			self.timer = None
+			
 		self.players[0].message('[Sistema] Duelo encerrado.')
 		self.players[1].message('[Sistema] Duelo encerrado.')
 		
