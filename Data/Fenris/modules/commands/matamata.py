@@ -160,6 +160,9 @@ class MataMataCommand(Command):
 				players.append(i)
 
 		if len(players) > 1:
+		
+			random.shuffle(players)
+		
 			p1 = players[0]
 			players.pop(0)
 
